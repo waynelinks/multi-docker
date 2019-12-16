@@ -1,0 +1,20 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t tjunction/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true  tjunction/react-test yarn test -- --coverage
+
+after_success:
+  - docker build -t tjunction/multi-client ./client
+  - docker build -t tjunction/multi-nginx ./nginx
+  - docker build -t tjunction/multi-server ./server
+  - docker build -t tjunction/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push tjunction/multi-client
+  - docker push tjunction/multi-nginx
+  - docker push tjunction/multi-server
+  - docker push tjunction/multi-worker
